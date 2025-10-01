@@ -1,0 +1,19 @@
+# OptimizerGPT - Python Dependencies
+# AI Model Analysis and Optimization Tool
+
+# Core ML Libraries
+tensorflow>=2.13.0
+keras>=2.13.0
+torch>=2.0.0
+torchvision>=0.15.0
+numpy>=1.24.0
+
+# Additional useful libraries for model analysis
+scikit-learn>=1.3.0
+matplotlib>=3.7.0
+pandas>=2.0.0
+pillow>=10.0.0
+
+# Optional: For advanced model optimization
+onnx>=1.14.0
+onnxruntime>=1.15.0
