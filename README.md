@@ -1,15 +1,15 @@
-# OptimizerGPT - AI Model Optimizer
+# Simpled-Ai - AI Model Optimizer
 
 <div align="center">
 
-![OptimizerGPT Logo](https://img.shields.io/badge/OptimizerGPT-AI%20Model%20Optimizer-blue?style=for-the-badge&logo=artificial-intelligence)
+![Simpled-Ai Logo](https://img.shields.io/badge/Simpled-Ai-AI%20Model%20Optimizer-blue?style=for-the-badge&logo=artificial-intelligence)
 
 **C++ / Qt 6 приложение для анализа и оптимизации нейросетевых моделей**
 
 [![Qt Version](https://img.shields.io/badge/Qt-6.9.2-green?style=flat-square&logo=qt)](https://www.qt.io/)
 [![C++ Standard](https://img.shields.io/badge/C++-17-blue?style=flat-square&logo=cplusplus)](https://en.cppreference.com/w/cpp/17)
 [![License](https://img.shields.io/badge/License-MIT-yellow?style=flat-square)](LICENSE)
-[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey?style=flat-square)](https://github.com/yourusername/OptimizerGPT)
+[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux%20%7C%20macOS-lightgrey?style=flat-square)](https://github.com/MemorialVietnama/Simpled-Ai-Models-App)
 
 </div>
 
@@ -17,7 +17,7 @@
 
 ## 📋 О проекте
 
-**OptimizerGPT** — это профессиональное C++ приложение, построенное на Qt 6, предназначенное для комплексного анализа и оптимизации нейросетевых моделей. Программа предоставляет интуитивный графический интерфейс для загрузки, анализа и упрощения моделей машинного обучения с поддержкой популярных форматов (Keras, TensorFlow, PyTorch).
+**Simpled-Ai** — это профессиональное C++ приложение, построенное на Qt 6, предназначенное для комплексного анализа и оптимизации нейросетевых моделей. Программа предоставляет интуитивный графический интерфейс для загрузки, анализа и упрощения моделей машинного обучения с поддержкой популярных форматов (Keras, TensorFlow, PyTorch).
 
 ### 🎯 Основные возможности
 
@@ -31,7 +31,7 @@
 ### 🏗️ Архитектура
 
 ```
-OptimizerGPT/
+Simpled-Ai/
 ├── 🎬 Scene Management    # Управление сценами приложения
 ├── 📁 File Selection      # Выбор и загрузка файлов моделей
 ├── ⏳ Loading Scene       # Анимация загрузки
@@ -57,8 +57,8 @@ OptimizerGPT/
 #### Windows
 ```bash
 # Клонирование репозитория
-git clone https://github.com/yourusername/OptimizerGPT.git
-cd OptimizerGPT
+git clone https://github.com/MemorialVietnama/Simpled-Ai-Models-App.git
+cd Simpled-Ai
 
 # Установка зависимостей
 pip install -r requirements.txt
@@ -75,8 +75,8 @@ sudo apt update
 sudo apt install qt6-base-dev qt6-tools-dev cmake build-essential
 
 # Клонирование и сборка
-git clone https://github.com/yourusername/OptimizerGPT.git
-cd OptimizerGPT
+git clone https://github.com/MemorialVietnama/Simpled-Ai-Models-App.git
+cd Simpled-Ai
 qmake && make
 ```
 
@@ -86,8 +86,8 @@ qmake && make
 brew install qt6 cmake
 
 # Сборка проекта
-git clone https://github.com/yourusername/OptimizerGPT.git
-cd OptimizerGPT
+git clone https://github.com/MemorialVietnama/Simpled-Ai-Models-App.git
+cd Simpled-Ai
 qmake && make
 ```
 
@@ -161,7 +161,7 @@ pip install tensorflow torch keras numpy pandas matplotlib
 
 ### Структура проекта
 ```
-OptimizerGPT/
+Simpled-Ai/
 ├── src/                    # Исходный код C++
 │   ├── main.cpp           # Точка входа
 │   ├── mainwindow.h/cpp   # Главное окно
@@ -181,7 +181,7 @@ OptimizerGPT/
 ### Сборка из исходников
 ```bash
 # Клонирование
-git clone https://github.com/yourusername/OptimizerGPT.git
+git clone https://github.com/MemorialVietnama/Simpled-Ai-Models-App.git
 cd OptimizerGPT
 
 # Создание build директории
