@@ -18,6 +18,8 @@ SOURCES += \
     loaderscene.cpp \
     analysisscene.cpp \
     simplifyscene.cpp \
+    comparisonscene.cpp \
+    simplification_algorithms.cpp \
     scenemanager.cpp \
     logger.cpp
 
@@ -27,6 +29,8 @@ HEADERS += \
     loaderscene.h \
     analysisscene.h \
     simplifyscene.h \
+    comparisonscene.h \
+    simplification_algorithms.h \
     scenemanager.h \
     logger.h
 

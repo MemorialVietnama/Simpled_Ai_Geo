@@ -359,7 +359,6 @@ SimplifyScene::SimplifyScene(QWidget *parent)
     : QWidget(parent)
     , backButton(nullptr)
     , startButton(nullptr)
-    , stopButton(nullptr)
     , titleLabel(nullptr)
     , statusLabel(nullptr)
     , network2DWidget(nullptr)
@@ -369,13 +368,13 @@ SimplifyScene::SimplifyScene(QWidget *parent)
     , loaderStep(0)
     , logOutput(nullptr)
     , isSimplificationRunning(false)
+    , algorithms(new SimplificationAlgorithms(this))
 {
     // Устанавливаем минимальный размер окна
     setMinimumSize(800, 600);
     
     setupUI();
     setup2DVisualization();
-    setupLoader();
     setupLogWindow();
 }
 
@@ -436,21 +435,28 @@ void SimplifyScene::setupUI()
     
     mainLayout->addLayout(headerLayout);
 
+    // Информация об автоматическом упрощении
+    QLabel *autoLabel = new QLabel("🤖 Автоматическое упрощение: Все алгоритмы будут применены последовательно");
+    autoLabel->setStyleSheet("font-size: 14px; font-weight: 500; color: #007bff; padding: 8px; background-color: #e3f2fd; border-radius: 6px;");
+    autoLabel->setAlignment(Qt::AlignCenter);
+    mainLayout->addWidget(autoLabel);
+
     // Control buttons - перемещаем наверх
     QHBoxLayout *buttonLayout = new QHBoxLayout();
     buttonLayout->setSpacing(12);
     
-    startButton = std::make_unique<QPushButton>("Начать упрощение");
+    startButton = std::make_unique<QPushButton>("🚀 Начать упрощение");
     startButton->setStyleSheet(R"(
         QPushButton {
             background-color: #28a745;
             color: white;
             border: none;
             border-radius: 6px;
-            padding: 12px 24px;
+            padding: 8px 16px;
             font-weight: 500;
-            font-size: 14px;
-            min-height: 40px;
+            font-size: 12px;
+            min-height: 32px;
+            min-width: 120px;
         }
         QPushButton:hover {
             background-color: #218838;
@@ -464,36 +470,40 @@ void SimplifyScene::setupUI()
         }
     )");
     
-    stopButton = std::make_unique<QPushButton>("Остановить");
-    stopButton->setStyleSheet(R"(
-        QPushButton {
-            background-color: #dc3545;
-            color: white;
-            border: none;
-            border-radius: 6px;
-            padding: 12px 24px;
-            font-weight: 500;
-            font-size: 14px;
-            min-height: 40px;
-        }
-        QPushButton:hover {
-            background-color: #c82333;
-        }
-        QPushButton:pressed {
-            background-color: #bd2130;
-        }
-        QPushButton:disabled {
-            background-color: #cccccc;
-            color: #999999;
-        }
-    )");
-    stopButton->setEnabled(false);
-    
     buttonLayout->addWidget(startButton.get());
-    buttonLayout->addWidget(stopButton.get());
     buttonLayout->addStretch();
     
     mainLayout->addLayout(buttonLayout);
+    
+    // Лоадер под кнопкой
+    QHBoxLayout *loaderLayout = new QHBoxLayout();
+    loaderLayout->setSpacing(12);
+    
+    loaderLabel = std::make_unique<QLabel>("Готов к упрощению");
+    loaderLabel->setStyleSheet("font-size: 14px; color: #666666;");
+    loaderLayout->addWidget(loaderLabel.get());
+    
+    loaderProgress = std::make_unique<QProgressBar>();
+    loaderProgress->setRange(0, 100);
+    loaderProgress->setValue(0);
+    loaderProgress->setVisible(false);
+    loaderProgress->setStyleSheet(R"(
+        QProgressBar {
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            text-align: center;
+            background-color: #f8f8f8;
+            height: 20px;
+        }
+        QProgressBar::chunk {
+            background-color: #28a745;
+            border-radius: 5px;
+        }
+    )");
+    loaderLayout->addWidget(loaderProgress.get());
+    
+    loaderLayout->addStretch();
+    mainLayout->addLayout(loaderLayout);
 
     // 3D Visualization Area - добавляем после кнопок
     QLabel *vizLabel = new QLabel("3D Визуализация нейронной сети (поворот по X и Y осям)");
@@ -514,7 +524,11 @@ void SimplifyScene::setupUI()
     // Connect signals
     connect(backButton.get(), &QPushButton::clicked, this, &SimplifyScene::onBackClicked);
     connect(startButton.get(), &QPushButton::clicked, this, &SimplifyScene::onStartSimplification);
-    connect(stopButton.get(), &QPushButton::clicked, this, &SimplifyScene::onStopSimplification);
+    
+    // Подключаем сигналы от алгоритмов
+    connect(algorithms, &SimplificationAlgorithms::progressUpdated, this, &SimplifyScene::onProgressUpdated);
+    connect(algorithms, &SimplificationAlgorithms::algorithmFinished, this, &SimplifyScene::onAlgorithmFinished);
+    connect(algorithms, &SimplificationAlgorithms::algorithmError, this, &SimplifyScene::onAlgorithmError);
 }
 
 void SimplifyScene::setup2DVisualization()
@@ -600,9 +614,17 @@ void SimplifyScene::setupLogWindow()
     // Добавляем в основной layout
     QVBoxLayout *mainLayout = qobject_cast<QVBoxLayout*>(this->layout());
     if (mainLayout) {
-        // Добавляем лог в конец layout
-        mainLayout->addWidget(logLabel);
-        mainLayout->addWidget(logOutput.get());
+        // Добавляем лог перед 3D виджетом, но после кнопок
+        // Найдем индекс 3D виджета и вставим лог перед ним
+        int networkIndex = mainLayout->indexOf(network2DWidget.get());
+        if (networkIndex >= 0) {
+            mainLayout->insertWidget(networkIndex, logLabel);
+            mainLayout->insertWidget(networkIndex + 1, logOutput.get());
+        } else {
+            // Если не найден, добавляем в конец
+            mainLayout->addWidget(logLabel);
+            mainLayout->addWidget(logOutput.get());
+        }
     }
 }
 
@@ -705,10 +727,119 @@ void SimplifyScene::addLogMessage(const QString &message)
     }
 }
 
+void SimplifyScene::onProgressUpdated(int percentage, const QString &message)
+{
+    if (loaderProgress) {
+        loaderProgress->setValue(percentage);
+    }
+    if (loaderLabel) {
+        loaderLabel->setText(QString("📊 %1% - %2").arg(percentage).arg(message));
+    }
+    addLogMessage(QString("📊 %1% - %2").arg(percentage).arg(message));
+}
+
+void SimplifyScene::onAlgorithmFinished(const QString &algorithmName, const SimplificationResult &result)
+{
+    addLogMessage(QString("✅ Алгоритм %1 завершен успешно!").arg(algorithmName));
+    addLogMessage(QString("📈 Результаты: сжатие %1%%, потеря точности %2%%, размер %3 МБ")
+                  .arg(result.sizeReduction, 0, 'f', 1)
+                  .arg(result.accuracyLoss, 0, 'f', 2)
+                  .arg(result.modelSizeMB, 0, 'f', 1));
+    
+    // Сохраняем результаты
+    simplifiedModelData = result.simplifiedModel;
+    simplificationResult = QJsonObject{
+        {"algorithm", algorithmName},
+        {"compressionRatio", result.compressionRatio},
+        {"accuracyLoss", result.accuracyLoss},
+        {"sizeReduction", result.sizeReduction},
+        {"totalParameters", result.totalParameters},
+        {"modelSizeMB", result.modelSizeMB},
+        {"layers", result.layers},
+        {"neurons", result.neurons},
+        {"connections", result.connections},
+        {"processingTime", result.processingTime}
+    };
+    
+    // Обновляем UI
+    startButton->setEnabled(true);
+    loaderProgress->setVisible(false);
+    loaderLabel->setText("✅ Упрощение завершено!");
+    isSimplificationRunning = false;
+    
+    // Обновляем визуализацию
+    updateNeuralNetwork();
+    
+    // Автоматически переходим к сравнению
+    addLogMessage("🔄 Автоматический переход к сравнению моделей...");
+    
+    qDebug() << "SimplifyScene - испускаем сигнал comparisonRequested:";
+    qDebug() << "  - originalModelData пуста:" << originalModelData.isEmpty();
+    qDebug() << "  - simplifiedModelData пуста:" << simplifiedModelData.isEmpty();
+    qDebug() << "  - simplificationResult пуст:" << simplificationResult.isEmpty();
+    
+    emit comparisonRequested(originalModelData, simplifiedModelData, simplificationResult);
+}
+
+void SimplifyScene::onAlgorithmError(const QString &error)
+{
+    addLogMessage(QString("❌ Ошибка алгоритма: %1").arg(error));
+    
+    // Обновляем UI
+    startButton->setEnabled(true);
+    loaderProgress->setVisible(false);
+    loaderLabel->setText("❌ Ошибка упрощения");
+    isSimplificationRunning = false;
+}
+
+void SimplifyScene::onShowComparison()
+{
+    if (originalModelData.isEmpty() || simplifiedModelData.isEmpty()) {
+        addLogMessage("❌ Нет данных для сравнения");
+        return;
+    }
+    
+    addLogMessage("🔄 Переход к сравнению моделей...");
+    emit comparisonRequested(originalModelData, simplifiedModelData, simplificationResult);
+}
+
+void SimplifyScene::startAllAlgorithms()
+{
+    // Список всех алгоритмов для последовательного выполнения
+    QStringList algorithmList = {
+        "Douglas-Peucker",
+        "Visvalingam-Whyatt", 
+        "Pruning",
+        "Quantization",
+        "Knowledge Distillation",
+        "Low-Rank Decomposition",
+        "Architecture Search",
+        "Combined"
+    };
+    
+    addLogMessage(QString("🔄 Будет выполнено %1 алгоритмов упрощения").arg(algorithmList.size()));
+    
+    // Запускаем первый алгоритм
+    if (!algorithmList.isEmpty()) {
+        algorithms->startSimplification(algorithmList.first(), currentModelData);
+    }
+}
+
 void SimplifyScene::setModelData(const QJsonObject &modelData)
 {
     currentModelData = modelData;
     addLogMessage("📊 Загружены данные модели для упрощения");
+    
+    // Отладочная информация
+    qDebug() << "SimplifyScene::setModelData - данные модели:";
+    qDebug() << "  - Пусто ли:" << modelData.isEmpty();
+    qDebug() << "  - Ключи:" << modelData.keys();
+    if (modelData.contains("layers")) {
+        qDebug() << "  - Количество слоев:" << modelData["layers"].toArray().size();
+    }
+    if (modelData.contains("parameters")) {
+        qDebug() << "  - Параметры:" << modelData["parameters"].toInt();
+    }
 }
 
 void SimplifyScene::startSimplification()
@@ -717,7 +848,6 @@ void SimplifyScene::startSimplification()
     
     isSimplificationRunning = true;
     startButton->setEnabled(false);
-    stopButton->setEnabled(true);
     loaderProgress->setVisible(true);
     loaderProgress->setValue(0);
     
@@ -735,7 +865,6 @@ void SimplifyScene::stopSimplification()
     loaderTimer->stop();
     
     startButton->setEnabled(true);
-    stopButton->setEnabled(false);
     loaderProgress->setVisible(false);
     loaderLabel->setText("Упрощение остановлено");
     
@@ -767,7 +896,6 @@ void SimplifyScene::updateLoaderText()
         loaderTimer->stop();
         isSimplificationRunning = false;
         startButton->setEnabled(true);
-        stopButton->setEnabled(false);
         loaderProgress->setVisible(false);
         loaderLabel->setText("Упрощение завершено!");
         
@@ -783,7 +911,33 @@ void SimplifyScene::onBackClicked()
 
 void SimplifyScene::onStartSimplification()
 {
-    startSimplification();
+    qDebug() << "SimplifyScene::onStartSimplification - проверка данных:";
+    qDebug() << "  - algorithms:" << (algorithms != nullptr);
+    qDebug() << "  - currentModelData.isEmpty():" << currentModelData.isEmpty();
+    qDebug() << "  - currentModelData keys:" << currentModelData.keys();
+    
+    if (!algorithms || currentModelData.isEmpty()) {
+        addLogMessage("❌ Ошибка: Нет данных модели или алгоритмов");
+        addLogMessage(QString("   - Алгоритмы: %1").arg(algorithms ? "✅" : "❌"));
+        addLogMessage(QString("   - Данные модели: %1").arg(currentModelData.isEmpty() ? "❌" : "✅"));
+        return;
+    }
+    
+    addLogMessage("🚀 Запуск автоматического упрощения: Все алгоритмы будут применены последовательно");
+    
+    // Сохраняем оригинальную модель
+    originalModelData = currentModelData;
+    
+    // Показываем лоадер
+    loaderProgress->setVisible(true);
+    loaderProgress->setValue(0);
+    loaderLabel->setText("🚀 Запуск упрощения...");
+    startButton->setEnabled(false);
+    
+    // Запускаем все алгоритмы последовательно
+    startAllAlgorithms();
+    
+    isSimplificationRunning = true;
 }
 
 void SimplifyScene::onStopSimplification()

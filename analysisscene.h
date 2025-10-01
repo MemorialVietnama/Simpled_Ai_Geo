@@ -33,6 +33,7 @@ public:
     void clearData();
     void startAnalysis();
     void stopAnalysis();
+    QJsonObject getModelData() const;
 
 signals:
     void backRequested();
@@ -82,6 +83,7 @@ private:
     
     // Data
     QString currentFilePath;
+    QJsonObject currentModelData;
     std::unique_ptr<QProcess> pythonProcess;
     QFuture<void> analysisFuture;
 };

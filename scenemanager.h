@@ -8,6 +8,7 @@
 #include "loaderscene.h"
 #include "analysisscene.h"
 #include "simplifyscene.h"
+#include "comparisonscene.h"
 
 class SceneManager : public QObject
 {
@@ -22,11 +23,13 @@ public:
     void goToLoader();
     void goToAnalysis();
     void goToSimplify();
+    void goToComparison();
 
     FileSelectionScene* getFileSelectionScene() const { return fileSelectionScene; }
     LoaderScene* getLoaderScene() const { return loaderScene; }
     AnalysisScene* getAnalysisScene() const { return analysisScene; }
     SimplifyScene* getSimplifyScene() const { return simplifyScene; }
+    ComparisonScene* getComparisonScene() const { return comparisonScene; }
 
 signals:
     void sceneChanged(const QString &sceneName);
@@ -39,6 +42,9 @@ private slots:
     void onSimplifyRequested();
     void onSimplifyBackRequested();
     void onSimplificationFinished();
+    void onComparisonRequested(const QJsonObject &originalModel, const QJsonObject &simplifiedModel, const QJsonObject &result);
+    void onComparisonBackRequested();
+    void onSaveRequested(const QString &filePath);
 
 private:
     void setupConnections();
@@ -49,9 +55,15 @@ private:
     LoaderScene *loaderScene;
     AnalysisScene *analysisScene;
     SimplifyScene *simplifyScene;
+    ComparisonScene *comparisonScene;
     
     QString currentFilePath;
     QTimer *loaderTimer;
+    
+    // Данные для сравнения
+    QJsonObject originalModelData;
+    QJsonObject simplifiedModelData;
+    QJsonObject simplificationResult;
 };
 
 #endif // SCENEMANAGER_H

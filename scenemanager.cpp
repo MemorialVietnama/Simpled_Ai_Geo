@@ -7,6 +7,7 @@ SceneManager::SceneManager(QStackedWidget *stackedWidget, QObject *parent)
     , loaderScene(nullptr)
     , analysisScene(nullptr)
     , simplifyScene(nullptr)
+    , comparisonScene(nullptr)
     , loaderTimer(nullptr)
 {
     initialize();
@@ -26,12 +27,14 @@ void SceneManager::initialize()
     loaderScene = new LoaderScene();
     analysisScene = new AnalysisScene();
     simplifyScene = new SimplifyScene();
+    comparisonScene = new ComparisonScene();
 
     // Add scenes to stacked widget
     stackedWidget->addWidget(fileSelectionScene);
     stackedWidget->addWidget(loaderScene);
     stackedWidget->addWidget(analysisScene);
     stackedWidget->addWidget(simplifyScene);
+    stackedWidget->addWidget(comparisonScene);
 
     // Setup connections
     setupConnections();
@@ -70,6 +73,14 @@ void SceneManager::setupConnections()
             this, &SceneManager::onSimplifyBackRequested);
     connect(simplifyScene, &SimplifyScene::simplificationFinished, 
             this, &SceneManager::onSimplificationFinished);
+    connect(simplifyScene, &SimplifyScene::comparisonRequested,
+            this, &SceneManager::onComparisonRequested);
+    
+    // Comparison scene connections
+    connect(comparisonScene, &ComparisonScene::backRequested,
+            this, &SceneManager::onComparisonBackRequested);
+    connect(comparisonScene, &ComparisonScene::saveRequested,
+            this, &SceneManager::onSaveRequested);
 }
 
 void SceneManager::goToFileSelection()
@@ -96,7 +107,42 @@ void SceneManager::goToAnalysis()
 void SceneManager::goToSimplify()
 {
     switchToScene(simplifyScene, "Simplify");
-    // TODO: Передать данные модели в сцену упрощения
+    
+    // Передаем данные модели в сцену упрощения
+    if (originalModelData.isEmpty()) {
+        // Если нет данных, создаем тестовые данные
+        QJsonObject testModel = QJsonObject{
+            {"name", "Test Model"},
+            {"size", 100.0},
+            {"parameters", 1000},
+            {"layers", QJsonArray{
+                QJsonObject{
+                    {"name", "Input Layer"},
+                    {"neurons", QJsonArray{
+                        QJsonObject{{"weight", 1.0}, {"activity", 0.8}},
+                        QJsonObject{{"weight", 0.9}, {"activity", 0.7}},
+                        QJsonObject{{"weight", 0.8}, {"activity", 0.6}}
+                    }}
+                },
+                QJsonObject{
+                    {"name", "Hidden Layer 1"},
+                    {"neurons", QJsonArray{
+                        QJsonObject{{"weight", 0.7}, {"activity", 0.5}},
+                        QJsonObject{{"weight", 0.6}, {"activity", 0.4}}
+                    }}
+                },
+                QJsonObject{
+                    {"name", "Output Layer"},
+                    {"neurons", QJsonArray{
+                        QJsonObject{{"weight", 0.5}, {"activity", 0.3}}
+                    }}
+                }
+            }}
+        };
+        originalModelData = testModel;
+    }
+    
+    simplifyScene->setModelData(originalModelData);
 }
 
 void SceneManager::switchToScene(QWidget *scene, const QString &sceneName)
@@ -124,8 +170,14 @@ void SceneManager::onBackRequested()
 
 void SceneManager::onAnalysisFinished()
 {
-    // Analysis is complete, user can now use simplify functionality
-    // This is handled by the analysis scene itself
+    // Analysis is complete, получаем данные из сцены анализа
+    if (analysisScene) {
+        // Получаем данные модели из сцены анализа
+        QJsonObject modelData = analysisScene->getModelData();
+        if (!modelData.isEmpty()) {
+            originalModelData = modelData;
+        }
+    }
 }
 
 void SceneManager::onSimplifyRequested()
@@ -143,4 +195,45 @@ void SceneManager::onSimplificationFinished()
     // Можно добавить логику после завершения упрощения
     // Например, показать результаты или вернуться к анализу
     goToAnalysis();
+}
+
+void SceneManager::goToComparison()
+{
+    qDebug() << "SceneManager::goToComparison - переключение на сцену сравнения";
+    qDebug() << "  - comparisonScene:" << (comparisonScene != nullptr);
+    qDebug() << "  - originalModelData пуста:" << originalModelData.isEmpty();
+    qDebug() << "  - simplifiedModelData пуста:" << simplifiedModelData.isEmpty();
+    
+    switchToScene(comparisonScene, "Comparison");
+    comparisonScene->setModels(originalModelData, simplifiedModelData, simplificationResult);
+    
+    qDebug() << "  - Сцена сравнения активирована и данные переданы";
+}
+
+void SceneManager::onComparisonRequested(const QJsonObject &originalModel, const QJsonObject &simplifiedModel, const QJsonObject &result)
+{
+    qDebug() << "SceneManager::onComparisonRequested - переход к сравнению:";
+    qDebug() << "  - Оригинальная модель пуста:" << originalModel.isEmpty();
+    qDebug() << "  - Упрощенная модель пуста:" << simplifiedModel.isEmpty();
+    qDebug() << "  - Результат пуст:" << result.isEmpty();
+    
+    originalModelData = originalModel;
+    simplifiedModelData = simplifiedModel;
+    simplificationResult = result;
+    
+    qDebug() << "  - Переход к сцене сравнения...";
+    goToComparison();
+}
+
+void SceneManager::onComparisonBackRequested()
+{
+    goToSimplify();
+}
+
+void SceneManager::onSaveRequested(const QString &filePath)
+{
+    // Здесь можно добавить логику сохранения модели
+    // Пока что просто выводим сообщение
+    qDebug() << "Сохранение модели в:" << filePath;
+    // TODO: Реализовать сохранение упрощенной модели
 }

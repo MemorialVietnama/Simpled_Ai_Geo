@@ -696,6 +696,17 @@ void AnalysisScene::handlePythonOutput()
                 logOutput->append("📝 Для анализа нужен полный файл модели с архитектурой, а не только веса.");
             }
         } else {
+            // Сохраняем данные модели для передачи в упрощение
+            currentModelData = modelData;
+            
+            // Отладочная информация
+            qDebug() << "AnalysisScene - данные модели сохранены:";
+            qDebug() << "  - Пусто ли:" << currentModelData.isEmpty();
+            qDebug() << "  - Ключи:" << currentModelData.keys();
+            if (currentModelData.contains("layers")) {
+                qDebug() << "  - Количество слоев:" << currentModelData["layers"].toArray().size();
+            }
+            
             // Populate all tabs with data
             populateModelTree(modelData);
             populateModelOverview(modelData);
@@ -1286,5 +1297,10 @@ void AnalysisScene::populateWeightsTree(const QJsonObject &modelData)
     
     // Expand all items by default
     weightsTree->expandAll();
+}
+
+QJsonObject AnalysisScene::getModelData() const
+{
+    return currentModelData;
 }
 

@@ -22,7 +22,9 @@
 #include <QGraphicsEllipseItem>
 #include <QGraphicsLineItem>
 #include <QJsonObject>
+#include <QComboBox>
 #include <memory>
+#include "simplification_algorithms.h"
 
 // Структура для нейрона
 struct Neuron {
@@ -105,6 +107,7 @@ public:
 signals:
     void backRequested();
     void simplificationFinished();
+    void comparisonRequested(const QJsonObject &originalModel, const QJsonObject &simplifiedModel, const QJsonObject &result);
 
 private slots:
     void onBackClicked();
@@ -112,6 +115,11 @@ private slots:
     void onStopSimplification();
     void updateLoaderText();
     void onSimplificationStep();
+    void onProgressUpdated(int percentage, const QString &message);
+    void onAlgorithmFinished(const QString &algorithmName, const SimplificationResult &result);
+    void onAlgorithmError(const QString &error);
+    void onShowComparison();
+    void startAllAlgorithms();
 
 private:
     void setupUI();
@@ -125,7 +133,6 @@ private:
     // UI Elements - using smart pointers for memory safety
     std::unique_ptr<QPushButton> backButton;
     std::unique_ptr<QPushButton> startButton;
-    std::unique_ptr<QPushButton> stopButton;
     std::unique_ptr<QLabel> titleLabel;
     std::unique_ptr<QLabel> statusLabel;
     
@@ -144,9 +151,15 @@ private:
     
     // Data
     QJsonObject currentModelData;
+    QJsonObject originalModelData;
+    QJsonObject simplifiedModelData;
+    QJsonObject simplificationResult;
     QVector<Neuron> neurons;
     QVector<Connection> connections;
     bool isSimplificationRunning;
+    
+    // Algorithms
+    SimplificationAlgorithms *algorithms;
 };
 
 #endif // SIMPLIFYSCENE_H
