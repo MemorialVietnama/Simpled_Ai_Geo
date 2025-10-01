@@ -1,4 +1,4 @@
-# OptimizerGPT - Python Dependencies
+# Simpled-Ai - Python Dependencies
 # AI Model Analysis and Optimization Tool
 
 # Core ML Libraries

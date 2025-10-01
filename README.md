@@ -182,19 +182,19 @@ Simpled-Ai/
 ```bash
 # Клонирование
 git clone https://github.com/MemorialVietnama/Simpled-Ai-Models-App.git
-cd OptimizerGPT
+cd Simpled-Ai
 
 # Создание build директории
 mkdir build && cd build
 
 # Конфигурация
-qmake ../OptimizerGPT.pro
+qmake ../SimpledAi.pro
 
 # Сборка
 make -j$(nproc)
 
 # Запуск
-./OptimizerGPT
+./SimpledAi
 ```
 
 ### Вклад в проект

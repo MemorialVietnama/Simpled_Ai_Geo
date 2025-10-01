@@ -18,7 +18,7 @@ void FileSelectionScene::setupUI()
     mainLayout->setContentsMargins(30, 30, 30, 30);
 
     // Create title
-    QLabel *titleLabel = new QLabel("OptimizerGPT");
+    QLabel *titleLabel = new QLabel("Simpled-Ai");
     titleLabel->setStyleSheet("font-size: 28px; font-weight: bold; color: #212529;");
     titleLabel->setAlignment(Qt::AlignCenter);
     mainLayout->addWidget(titleLabel);

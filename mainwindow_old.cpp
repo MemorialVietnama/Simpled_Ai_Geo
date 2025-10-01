@@ -11,7 +11,7 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
 {
     // Set window properties
-    setWindowTitle("OptimizerGPT - AI Model Optimizer");
+    setWindowTitle("Simpled-Ai - AI Model Optimizer");
     setMinimumSize(800, 600);
     setAcceptDrops(true);
     
@@ -161,7 +161,7 @@ void MainWindow::createFileSelectionView()
     mainLayout->setContentsMargins(30, 30, 30, 30);
 
     // Create title
-    QLabel *titleLabel = new QLabel("OptimizerGPT");
+    QLabel *titleLabel = new QLabel("Simpled-Ai");
     titleLabel->setStyleSheet("font-size: 28px; font-weight: bold; color: #212529;");
     titleLabel->setAlignment(Qt::AlignCenter);
     mainLayout->addWidget(titleLabel);

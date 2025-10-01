@@ -6,7 +6,7 @@ int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
     
-    qDebug() << "OptimizerGPT - AI Model Optimizer запущен";
+    qDebug() << "Simpled-Ai - AI Model Optimizer запущен";
     
     MainWindow w;
     w.show();

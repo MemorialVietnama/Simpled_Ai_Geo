@@ -1,6 +1,6 @@
 @echo off
 echo ========================================
-echo    OptimizerGPT - Запуск программы
+echo    Simpled-Ai - Запуск программы
 echo ========================================
 echo.
 
@@ -42,19 +42,19 @@ if errorlevel 1 (
 )
 
 echo.
-echo Запускаем OptimizerGPT...
+echo Запускаем Simpled-Ai...
 echo.
 
 REM Try to find the executable in different locations
 set EXE_PATH=""
-if exist "build\Desktop_Qt_6_9_2_llvm_mingw_64_bit-Debug\debug\OptimizerGPT.exe" (
-    set EXE_PATH="build\Desktop_Qt_6_9_2_llvm_mingw_64_bit-Debug\debug\OptimizerGPT.exe"
-) else if exist "OptimizerGPT.exe" (
-    set EXE_PATH="OptimizerGPT.exe"
-) else if exist "build\release\OptimizerGPT.exe" (
-    set EXE_PATH="build\release\OptimizerGPT.exe"
+if exist "build\Desktop_Qt_6_9_2_llvm_mingw_64_bit-Debug\debug\SimpledAi.exe" (
+    set EXE_PATH="build\Desktop_Qt_6_9_2_llvm_mingw_64_bit-Debug\debug\SimpledAi.exe"
+) else if exist "SimpledAi.exe" (
+    set EXE_PATH="SimpledAi.exe"
+) else if exist "build\release\SimpledAi.exe" (
+    set EXE_PATH="build\release\SimpledAi.exe"
 ) else (
-    echo ❌ ОШИБКА: Исполняемый файл OptimizerGPT.exe не найден!
+    echo ❌ ОШИБКА: Исполняемый файл SimpledAi.exe не найден!
     echo Убедитесь, что программа скомпилирована в Qt Creator
     echo Или запустите через Qt Creator
     pause

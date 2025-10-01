@@ -17,7 +17,7 @@ MainWindow::~MainWindow()
 void MainWindow::setupUI()
 {
     // Set window properties
-    setWindowTitle("OptimizerGPT - AI Model Optimizer");
+    setWindowTitle("Simpled-Ai - AI Model Optimizer");
     setMinimumSize(800, 600);
     setAcceptDrops(true);
     
