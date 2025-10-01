@@ -59,6 +59,7 @@ protected:
     void paintEvent(QPaintEvent *event) override;
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
+    void mouseReleaseEvent(QMouseEvent *event) override;
     void wheelEvent(QWheelEvent *event) override;
 
 private:
@@ -73,7 +74,8 @@ private:
     QVector<Neuron> neurons;
     QVector<Connection> connections;
 
-    // Камера (2D проекция)
+    // Камера (3D проекция)
+    float rotationX;
     float rotationY;
     float zoom;
     QPoint lastMousePos;

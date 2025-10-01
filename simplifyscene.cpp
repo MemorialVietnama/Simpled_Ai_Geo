@@ -20,6 +20,7 @@
 
 NeuralNetwork2DWidget::NeuralNetwork2DWidget(QWidget *parent)
     : QWidget(parent)
+    , rotationX(0.0f)
     , rotationY(0.0f)
     , zoom(1.0f)
     , isDragging(false)
@@ -92,9 +93,17 @@ void NeuralNetwork2DWidget::drawNeurons(QPainter &painter)
         if (!neurons[i].isActive) continue;
         
         QPoint screenPos = worldToScreen(neurons[i].position);
+        float cosX = cos(rotationX * M_PI / 180.0f);
+        float sinX = sin(rotationX * M_PI / 180.0f);
         float cosY = cos(rotationY * M_PI / 180.0f);
         float sinY = sin(rotationY * M_PI / 180.0f);
-        float z = neurons[i].position.x() * sinY + neurons[i].position.z() * cosY;
+        
+        // Применяем поворот по Y
+        float x1 = neurons[i].position.x() * cosY - neurons[i].position.z() * sinY;
+        float z1 = neurons[i].position.x() * sinY + neurons[i].position.z() * cosY;
+        
+        // Применяем поворот по X
+        float z = neurons[i].position.y() * sinX + z1 * cosX;
         
         depthSorted.append(qMakePair(z, i));
     }
@@ -109,9 +118,17 @@ void NeuralNetwork2DWidget::drawNeurons(QPainter &painter)
         QPoint screenPos = worldToScreen(neuron.position);
         
         // Вычисляем глубину для эффектов
+        float cosX = cos(rotationX * M_PI / 180.0f);
+        float sinX = sin(rotationX * M_PI / 180.0f);
         float cosY = cos(rotationY * M_PI / 180.0f);
         float sinY = sin(rotationY * M_PI / 180.0f);
-        float z = neuron.position.x() * sinY + neuron.position.z() * cosY;
+        
+        // Применяем поворот по Y
+        float x1 = neuron.position.x() * cosY - neuron.position.z() * sinY;
+        float z1 = neuron.position.x() * sinY + neuron.position.z() * cosY;
+        
+        // Применяем поворот по X
+        float z = neuron.position.y() * sinX + z1 * cosX;
         float depth = (z + 2.0f) / 4.0f; // Нормализуем от 0 до 1
         depth = qBound(0.0f, depth, 1.0f);
         
@@ -166,10 +183,20 @@ void NeuralNetwork2DWidget::drawConnections(QPainter &painter)
         if (!fromNeuron.isActive || !toNeuron.isActive) continue;
         
         // Вычисляем среднюю глубину связи
+        float cosX = cos(rotationX * M_PI / 180.0f);
+        float sinX = sin(rotationX * M_PI / 180.0f);
         float cosY = cos(rotationY * M_PI / 180.0f);
         float sinY = sin(rotationY * M_PI / 180.0f);
-        float z1 = fromNeuron.position.x() * sinY + fromNeuron.position.z() * cosY;
-        float z2 = toNeuron.position.x() * sinY + toNeuron.position.z() * cosY;
+        
+        // Для fromNeuron
+        float x1_from = fromNeuron.position.x() * cosY - fromNeuron.position.z() * sinY;
+        float z1_from = fromNeuron.position.x() * sinY + fromNeuron.position.z() * cosY;
+        float z1 = fromNeuron.position.y() * sinX + z1_from * cosX;
+        
+        // Для toNeuron
+        float x1_to = toNeuron.position.x() * cosY - toNeuron.position.z() * sinY;
+        float z1_to = toNeuron.position.x() * sinY + toNeuron.position.z() * cosY;
+        float z2 = toNeuron.position.y() * sinX + z1_to * cosX;
         float avgZ = (z1 + z2) / 2.0f;
         
         depthSorted.append(qMakePair(avgZ, i));
@@ -189,10 +216,20 @@ void NeuralNetwork2DWidget::drawConnections(QPainter &painter)
         QPoint toPos = worldToScreen(toNeuron.position);
         
         // Вычисляем глубину для эффектов
+        float cosX = cos(rotationX * M_PI / 180.0f);
+        float sinX = sin(rotationX * M_PI / 180.0f);
         float cosY = cos(rotationY * M_PI / 180.0f);
         float sinY = sin(rotationY * M_PI / 180.0f);
-        float z1 = fromNeuron.position.x() * sinY + fromNeuron.position.z() * cosY;
-        float z2 = toNeuron.position.x() * sinY + toNeuron.position.z() * cosY;
+        
+        // Для fromNeuron
+        float x1_from = fromNeuron.position.x() * cosY - fromNeuron.position.z() * sinY;
+        float z1_from = fromNeuron.position.x() * sinY + fromNeuron.position.z() * cosY;
+        float z1 = fromNeuron.position.y() * sinX + z1_from * cosX;
+        
+        // Для toNeuron
+        float x1_to = toNeuron.position.x() * cosY - toNeuron.position.z() * sinY;
+        float z1_to = toNeuron.position.x() * sinY + toNeuron.position.z() * cosY;
+        float z2 = toNeuron.position.y() * sinX + z1_to * cosX;
         float avgZ = (z1 + z2) / 2.0f;
         float depth = (avgZ + 2.0f) / 4.0f;
         depth = qBound(0.0f, depth, 1.0f);
@@ -220,20 +257,26 @@ void NeuralNetwork2DWidget::drawConnections(QPainter &painter)
 
 QPoint NeuralNetwork2DWidget::worldToScreen(const QVector3D &worldPos)
 {
-    // 3D проекция с поворотом по Y
+    // 3D проекция с поворотом по X и Y
+    float cosX = cos(rotationX * M_PI / 180.0f);
+    float sinX = sin(rotationX * M_PI / 180.0f);
     float cosY = cos(rotationY * M_PI / 180.0f);
     float sinY = sin(rotationY * M_PI / 180.0f);
     
-    // Применяем поворот по Y (основной поворот)
-    float x = worldPos.x() * cosY - worldPos.z() * sinY;
-    float z = worldPos.x() * sinY + worldPos.z() * cosY;
+    // Применяем поворот по Y (горизонтальный)
+    float x1 = worldPos.x() * cosY - worldPos.z() * sinY;
+    float z1 = worldPos.x() * sinY + worldPos.z() * cosY;
+    
+    // Применяем поворот по X (вертикальный)
+    float y = worldPos.y() * cosX - z1 * sinX;
+    float z = worldPos.y() * sinX + z1 * cosX;
     
     // Простая перспективная проекция
     float perspective = 1.0f / (1.0f + z * 0.1f);
     
     // Проекция на экран с центрированием
-    int screenX = static_cast<int>(center.x() + x * 80 * zoom * perspective);
-    int screenY = static_cast<int>(center.y() + worldPos.y() * 80 * zoom * perspective);
+    int screenX = static_cast<int>(center.x() + x1 * 80 * zoom * perspective);
+    int screenY = static_cast<int>(center.y() + y * 80 * zoom * perspective);
     
     return QPoint(screenX, screenY);
 }
@@ -252,6 +295,7 @@ void NeuralNetwork2DWidget::mousePressEvent(QMouseEvent *event)
     if (event->button() == Qt::LeftButton) {
         isDragging = true;
         lastMousePos = event->pos();
+        setCursor(Qt::ClosedHandCursor); // Показываем, что перетаскиваем
     }
 }
 
@@ -260,18 +304,36 @@ void NeuralNetwork2DWidget::mouseMoveEvent(QMouseEvent *event)
     mousePos = event->pos();
     hoveredNeuron = getNeuronAt(mousePos);
     
-    if (isDragging) {
+    if (isDragging && (event->buttons() & Qt::LeftButton)) {
         int dx = event->pos().x() - lastMousePos.x();
+        int dy = event->pos().y() - lastMousePos.y();
+        
+        // Поворот по Y (горизонтальное движение мыши)
         rotationY += dx * 0.5f;
+        
+        // Поворот по X (вертикальное движение мыши)
+        rotationX += dy * 0.5f;
         
         // Ограничиваем поворот по Y
         if (rotationY > 89.0f) rotationY = 89.0f;
         if (rotationY < -89.0f) rotationY = -89.0f;
         
+        // Ограничиваем поворот по X
+        if (rotationX > 89.0f) rotationX = 89.0f;
+        if (rotationX < -89.0f) rotationX = -89.0f;
+        
         update();
         lastMousePos = event->pos();
     } else {
         update(); // Обновляем для подсказок
+    }
+}
+
+void NeuralNetwork2DWidget::mouseReleaseEvent(QMouseEvent *event)
+{
+    if (event->button() == Qt::LeftButton) {
+        isDragging = false;
+        setCursor(Qt::ArrowCursor); // Возвращаем обычный курсор
     }
 }
 
@@ -305,6 +367,9 @@ SimplifyScene::SimplifyScene(QWidget *parent)
     , logOutput(nullptr)
     , isSimplificationRunning(false)
 {
+    // Устанавливаем минимальный размер окна
+    setMinimumSize(800, 600);
+    
     setupUI();
     setup2DVisualization();
     setupLoader();
@@ -368,25 +433,7 @@ void SimplifyScene::setupUI()
     
     mainLayout->addLayout(headerLayout);
 
-    // Убираем status label для расширения 3D окна
-
-    // 3D Visualization Area
-    QLabel *vizLabel = new QLabel("3D Визуализация нейронной сети (поворот только по Y-оси)");
-    vizLabel->setStyleSheet("font-size: 16px; font-weight: 600; color: #333333; margin-bottom: 8px;");
-    mainLayout->addWidget(vizLabel);
-    
-    network2DWidget = new NeuralNetwork2DWidget();
-    network2DWidget->setMinimumHeight(500); // Увеличиваем высоту
-    network2DWidget->setStyleSheet(R"(
-        QWidget {
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            background-color: #f8f8f8;
-        }
-    )");
-    mainLayout->addWidget(network2DWidget);
-
-    // Control buttons
+    // Control buttons - перемещаем наверх
     QHBoxLayout *buttonLayout = new QHBoxLayout();
     buttonLayout->setSpacing(12);
     
@@ -444,6 +491,22 @@ void SimplifyScene::setupUI()
     buttonLayout->addStretch();
     
     mainLayout->addLayout(buttonLayout);
+
+    // 3D Visualization Area - добавляем после кнопок
+    QLabel *vizLabel = new QLabel("3D Визуализация нейронной сети (поворот по X и Y осям)");
+    vizLabel->setStyleSheet("font-size: 16px; font-weight: 600; color: #333333; margin-bottom: 8px;");
+    mainLayout->addWidget(vizLabel);
+    
+    network2DWidget = new NeuralNetwork2DWidget();
+    network2DWidget->setFixedHeight(400); // Фиксированная высота для 3D окна
+    network2DWidget->setStyleSheet(R"(
+        QWidget {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background-color: #f8f8f8;
+        }
+    )");
+    mainLayout->addWidget(network2DWidget);
 
     // Connect signals
     connect(backButton, &QPushButton::clicked, this, &SimplifyScene::onBackClicked);
@@ -514,7 +577,9 @@ void SimplifyScene::setupLogWindow()
     
     logOutput = new QTextEdit();
     logOutput->setReadOnly(true);
-    logOutput->setMaximumHeight(150);
+    logOutput->setFixedHeight(100); // Фиксированная высота лога
+    logOutput->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded); // Добавляем скролл
+    logOutput->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
     logOutput->setFont(QFont("Consolas", 10));
     logOutput->setStyleSheet(R"(
         QTextEdit {
@@ -532,6 +597,7 @@ void SimplifyScene::setupLogWindow()
     // Добавляем в основной layout
     QVBoxLayout *mainLayout = qobject_cast<QVBoxLayout*>(this->layout());
     if (mainLayout) {
+        // Добавляем лог в конец layout
         mainLayout->addWidget(logLabel);
         mainLayout->addWidget(logOutput);
     }
@@ -554,13 +620,26 @@ void SimplifyScene::generateNeuralNetwork()
             float layerSpacing = 1.0f;
             float neuronSpacing = 0.4f;
             
-            // Располагаем нейроны в 3D пространстве
+            // Располагаем нейроны в 3D пространстве с более интересной геометрией
             float x = (i - neuronsPerLayer/2.0f) * neuronSpacing;
             float y = layer * layerSpacing - (numLayers * layerSpacing) / 2.0f; // Центрируем по Y
-            float z = sin(i * 0.5f) * 0.3f + cos(layer * 0.3f) * 0.2f; // Волнообразное расположение по Z
+            
+            // Создаем более сложную 3D структуру
+            float radius = 0.5f + layer * 0.1f; // Радиус увеличивается с каждым слоем
+            float angle = (i * 2.0f * M_PI) / neuronsPerLayer; // Угол для кругового расположения
+            float z = radius * cos(angle) + sin(layer * 0.4f) * 0.3f; // Круговое + волновое расположение
             
             neuron.position = QVector3D(x, y, z);
             neuron.size = 0.15f + (rand() % 15) / 100.0f;
+            
+            // Отладочная информация (можно убрать в релизе)
+            if (layer == 0 && i < 3) {
+                qDebug() << QString("Нейрон [%1,%2]: позиция (%3, %4, %5)")
+                    .arg(layer).arg(i)
+                    .arg(x, 0, 'f', 2)
+                    .arg(y, 0, 'f', 2)
+                    .arg(z, 0, 'f', 2);
+            }
             
             // Цветовая схема: от синего к красному через слои
             float layerRatio = float(layer) / (numLayers - 1);
@@ -724,13 +803,15 @@ void NeuralNetwork2DWidget::drawTooltips(QPainter &painter)
         const Neuron &neuron = neurons[hoveredNeuron];
         QPoint screenPos = worldToScreen(neuron.position);
         
-        // Создаем текст подсказки
-        QString tooltipText = QString("Слой: %1\nНейрон: %2\nПозиция: (%.2f, %.2f, %.2f)")
+        // Создаем текст подсказки с реальными координатами и дополнительной информацией
+        QString tooltipText = QString("Слой: %1\nНейрон: %2\nПозиция: (%3, %4, %5)\nРазмер: %6\nАктивен: %7")
             .arg(neuron.layer)
             .arg(neuron.index)
-            .arg(neuron.position.x())
-            .arg(neuron.position.y())
-            .arg(neuron.position.z());
+            .arg(neuron.position.x(), 0, 'f', 2)
+            .arg(neuron.position.y(), 0, 'f', 2)
+            .arg(neuron.position.z(), 0, 'f', 2)
+            .arg(neuron.size, 0, 'f', 2)
+            .arg(neuron.isActive ? "Да" : "Нет");
         
         // Настраиваем шрифт
         QFont font("Arial", 10);
