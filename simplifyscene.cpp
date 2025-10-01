@@ -92,14 +92,14 @@ void NeuralNetwork2DWidget::drawNeurons(QPainter &painter)
     for (int i = 0; i < neurons.size(); ++i) {
         if (!neurons[i].isActive) continue;
         
-        QPoint screenPos = worldToScreen(neurons[i].position);
+        // QPoint screenPos = worldToScreen(neurons[i].position); // Не используется
         float cosX = cos(rotationX * M_PI / 180.0f);
         float sinX = sin(rotationX * M_PI / 180.0f);
         float cosY = cos(rotationY * M_PI / 180.0f);
         float sinY = sin(rotationY * M_PI / 180.0f);
         
         // Применяем поворот по Y
-        float x1 = neurons[i].position.x() * cosY - neurons[i].position.z() * sinY;
+        // float x1 = neurons[i].position.x() * cosY - neurons[i].position.z() * sinY; // Не используется
         float z1 = neurons[i].position.x() * sinY + neurons[i].position.z() * cosY;
         
         // Применяем поворот по X
@@ -115,7 +115,7 @@ void NeuralNetwork2DWidget::drawNeurons(QPainter &painter)
         int i = pair.second;
         const Neuron &neuron = neurons[i];
         
-        QPoint screenPos = worldToScreen(neuron.position);
+        // QPoint screenPos = worldToScreen(neuron.position); // Не используется
         
         // Вычисляем глубину для эффектов
         float cosX = cos(rotationX * M_PI / 180.0f);
@@ -124,13 +124,16 @@ void NeuralNetwork2DWidget::drawNeurons(QPainter &painter)
         float sinY = sin(rotationY * M_PI / 180.0f);
         
         // Применяем поворот по Y
-        float x1 = neuron.position.x() * cosY - neuron.position.z() * sinY;
+        // float x1 = neuron.position.x() * cosY - neuron.position.z() * sinY; // Не используется
         float z1 = neuron.position.x() * sinY + neuron.position.z() * cosY;
         
         // Применяем поворот по X
         float z = neuron.position.y() * sinX + z1 * cosX;
         float depth = (z + 2.0f) / 4.0f; // Нормализуем от 0 до 1
         depth = qBound(0.0f, depth, 1.0f);
+        
+        // Проекция на экран
+        QPoint screenPos = worldToScreen(neuron.position);
         
         // Размер зависит от глубины
         int radius = static_cast<int>(neuron.size * 25 * zoom * (0.5f + 0.5f * depth));
@@ -189,12 +192,12 @@ void NeuralNetwork2DWidget::drawConnections(QPainter &painter)
         float sinY = sin(rotationY * M_PI / 180.0f);
         
         // Для fromNeuron
-        float x1_from = fromNeuron.position.x() * cosY - fromNeuron.position.z() * sinY;
+        // float x1_from = fromNeuron.position.x() * cosY - fromNeuron.position.z() * sinY; // Не используется
         float z1_from = fromNeuron.position.x() * sinY + fromNeuron.position.z() * cosY;
         float z1 = fromNeuron.position.y() * sinX + z1_from * cosX;
         
         // Для toNeuron
-        float x1_to = toNeuron.position.x() * cosY - toNeuron.position.z() * sinY;
+        // float x1_to = toNeuron.position.x() * cosY - toNeuron.position.z() * sinY; // Не используется
         float z1_to = toNeuron.position.x() * sinY + toNeuron.position.z() * cosY;
         float z2 = toNeuron.position.y() * sinX + z1_to * cosX;
         float avgZ = (z1 + z2) / 2.0f;
@@ -222,12 +225,12 @@ void NeuralNetwork2DWidget::drawConnections(QPainter &painter)
         float sinY = sin(rotationY * M_PI / 180.0f);
         
         // Для fromNeuron
-        float x1_from = fromNeuron.position.x() * cosY - fromNeuron.position.z() * sinY;
+        // float x1_from = fromNeuron.position.x() * cosY - fromNeuron.position.z() * sinY; // Не используется
         float z1_from = fromNeuron.position.x() * sinY + fromNeuron.position.z() * cosY;
         float z1 = fromNeuron.position.y() * sinX + z1_from * cosX;
         
         // Для toNeuron
-        float x1_to = toNeuron.position.x() * cosY - toNeuron.position.z() * sinY;
+        // float x1_to = toNeuron.position.x() * cosY - toNeuron.position.z() * sinY; // Не используется
         float z1_to = toNeuron.position.x() * sinY + toNeuron.position.z() * cosY;
         float z2 = toNeuron.position.y() * sinX + z1_to * cosX;
         float avgZ = (z1 + z2) / 2.0f;
@@ -394,7 +397,7 @@ void SimplifyScene::setupUI()
     // Header
     QHBoxLayout *headerLayout = new QHBoxLayout();
     
-    backButton = new QPushButton("← Назад");
+    backButton = std::make_unique<QPushButton>("← Назад");
     backButton->setObjectName("backButton");
     backButton->setMaximumWidth(100);
     backButton->setMinimumHeight(40);
@@ -416,18 +419,18 @@ void SimplifyScene::setupUI()
             background-color: #e0e0e0;
         }
     )");
-    headerLayout->addWidget(backButton);
+    headerLayout->addWidget(backButton.get());
     
     headerLayout->addStretch();
     
-    titleLabel = new QLabel("Упрощение модели");
+    titleLabel = std::make_unique<QLabel>("Упрощение модели");
     titleLabel->setStyleSheet(R"(
         font-size: 24px; 
         font-weight: 600; 
         color: #333333;
         padding: 8px 0;
     )");
-    headerLayout->addWidget(titleLabel);
+    headerLayout->addWidget(titleLabel.get());
     
     headerLayout->addStretch();
     
@@ -437,7 +440,7 @@ void SimplifyScene::setupUI()
     QHBoxLayout *buttonLayout = new QHBoxLayout();
     buttonLayout->setSpacing(12);
     
-    startButton = new QPushButton("Начать упрощение");
+    startButton = std::make_unique<QPushButton>("Начать упрощение");
     startButton->setStyleSheet(R"(
         QPushButton {
             background-color: #28a745;
@@ -461,7 +464,7 @@ void SimplifyScene::setupUI()
         }
     )");
     
-    stopButton = new QPushButton("Остановить");
+    stopButton = std::make_unique<QPushButton>("Остановить");
     stopButton->setStyleSheet(R"(
         QPushButton {
             background-color: #dc3545;
@@ -486,8 +489,8 @@ void SimplifyScene::setupUI()
     )");
     stopButton->setEnabled(false);
     
-    buttonLayout->addWidget(startButton);
-    buttonLayout->addWidget(stopButton);
+    buttonLayout->addWidget(startButton.get());
+    buttonLayout->addWidget(stopButton.get());
     buttonLayout->addStretch();
     
     mainLayout->addLayout(buttonLayout);
@@ -497,7 +500,7 @@ void SimplifyScene::setupUI()
     vizLabel->setStyleSheet("font-size: 16px; font-weight: 600; color: #333333; margin-bottom: 8px;");
     mainLayout->addWidget(vizLabel);
     
-    network2DWidget = new NeuralNetwork2DWidget();
+    network2DWidget = std::make_unique<NeuralNetwork2DWidget>();
     network2DWidget->setFixedHeight(400); // Фиксированная высота для 3D окна
     network2DWidget->setStyleSheet(R"(
         QWidget {
@@ -506,12 +509,12 @@ void SimplifyScene::setupUI()
             background-color: #f8f8f8;
         }
     )");
-    mainLayout->addWidget(network2DWidget);
+    mainLayout->addWidget(network2DWidget.get());
 
     // Connect signals
-    connect(backButton, &QPushButton::clicked, this, &SimplifyScene::onBackClicked);
-    connect(startButton, &QPushButton::clicked, this, &SimplifyScene::onStartSimplification);
-    connect(stopButton, &QPushButton::clicked, this, &SimplifyScene::onStopSimplification);
+    connect(backButton.get(), &QPushButton::clicked, this, &SimplifyScene::onBackClicked);
+    connect(startButton.get(), &QPushButton::clicked, this, &SimplifyScene::onStartSimplification);
+    connect(stopButton.get(), &QPushButton::clicked, this, &SimplifyScene::onStopSimplification);
 }
 
 void SimplifyScene::setup2DVisualization()
@@ -523,7 +526,7 @@ void SimplifyScene::setup2DVisualization()
 void SimplifyScene::setupLoader()
 {
     // Настройка динамического лоадера
-    loaderLabel = new QLabel("Готов к работе");
+    loaderLabel = std::make_unique<QLabel>("Готов к работе");
     loaderLabel->setStyleSheet(R"(
         font-size: 16px; 
         font-weight: 500; 
@@ -537,7 +540,7 @@ void SimplifyScene::setupLoader()
     loaderLabel->setAlignment(Qt::AlignCenter);
     loaderLabel->setMinimumHeight(60);
     
-    loaderProgress = new QProgressBar();
+    loaderProgress = std::make_unique<QProgressBar>();
     loaderProgress->setStyleSheet(R"(
         QProgressBar {
             border: 1px solid #e0e0e0;
@@ -554,8 +557,8 @@ void SimplifyScene::setupLoader()
     loaderProgress->setVisible(false);
     
     // Настройка таймера для анимации
-    loaderTimer = new QTimer(this);
-    connect(loaderTimer, &QTimer::timeout, this, &SimplifyScene::updateLoaderText);
+    loaderTimer = std::make_unique<QTimer>(this);
+    connect(loaderTimer.get(), &QTimer::timeout, this, &SimplifyScene::updateLoaderText);
     
     // Сообщения для лоадера
     loaderMessages = {
@@ -575,7 +578,7 @@ void SimplifyScene::setupLogWindow()
     QLabel *logLabel = new QLabel("Лог операций");
     logLabel->setStyleSheet("font-size: 16px; font-weight: 600; color: #333333; margin-bottom: 8px;");
     
-    logOutput = new QTextEdit();
+    logOutput = std::make_unique<QTextEdit>();
     logOutput->setReadOnly(true);
     logOutput->setFixedHeight(100); // Фиксированная высота лога
     logOutput->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded); // Добавляем скролл
@@ -599,7 +602,7 @@ void SimplifyScene::setupLogWindow()
     if (mainLayout) {
         // Добавляем лог в конец layout
         mainLayout->addWidget(logLabel);
-        mainLayout->addWidget(logOutput);
+        mainLayout->addWidget(logOutput.get());
     }
 }
 
@@ -801,7 +804,7 @@ void NeuralNetwork2DWidget::drawTooltips(QPainter &painter)
 {
     if (hoveredNeuron >= 0 && hoveredNeuron < neurons.size()) {
         const Neuron &neuron = neurons[hoveredNeuron];
-        QPoint screenPos = worldToScreen(neuron.position);
+        // QPoint screenPos = worldToScreen(neuron.position); // Не используется
         
         // Создаем текст подсказки с реальными координатами и дополнительной информацией
         QString tooltipText = QString("Слой: %1\nНейрон: %2\nПозиция: (%3, %4, %5)\nРазмер: %6\nАктивен: %7")

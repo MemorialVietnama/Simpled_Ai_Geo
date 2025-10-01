@@ -1,4 +1,4 @@
-QT       += core gui
+QT       += core gui concurrent
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -18,7 +18,8 @@ SOURCES += \
     loaderscene.cpp \
     analysisscene.cpp \
     simplifyscene.cpp \
-    scenemanager.cpp
+    scenemanager.cpp \
+    logger.cpp
 
 HEADERS += \
     mainwindow.h \
@@ -26,7 +27,8 @@ HEADERS += \
     loaderscene.h \
     analysisscene.h \
     simplifyscene.h \
-    scenemanager.h
+    scenemanager.h \
+    logger.h
 
 
 # Default rules for deployment.

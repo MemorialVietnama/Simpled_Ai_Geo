@@ -9,7 +9,15 @@
 
 AnalysisScene::AnalysisScene(QWidget *parent)
     : QWidget(parent)
-    , pythonProcess(nullptr)
+    , analyzeButton(nullptr)
+    , simplifyButton(nullptr)
+    , backButton(nullptr)
+    , modelTitleLabel(nullptr)
+    , modelPathLabel(nullptr)
+    , modelTree(nullptr)
+    , logOutput(nullptr)
+    , progressBar(nullptr)
+    , mainTabWidget(nullptr)
     , overviewTable(nullptr)
     , layersTable(nullptr)
     , optimizerTable(nullptr)
@@ -17,23 +25,15 @@ AnalysisScene::AnalysisScene(QWidget *parent)
     , weightsTextEdit(nullptr)
     , weightsTable(nullptr)
     , weightsTree(nullptr)
-    , modelTree(nullptr)
-    , mainTabWidget(nullptr)
-    , analyzeButton(nullptr)
-    , simplifyButton(nullptr)
-    , backButton(nullptr)
-    , modelTitleLabel(nullptr)
-    , modelPathLabel(nullptr)
-    , logOutput(nullptr)
-    , progressBar(nullptr)
+    , pythonProcess(nullptr)
 {
     setupUI();
     
-    // Initialize Python process
-    pythonProcess = new QProcess(this);
-    connect(pythonProcess, &QProcess::readyReadStandardOutput, this, &AnalysisScene::handlePythonOutput);
-    connect(pythonProcess, &QProcess::readyReadStandardError, this, &AnalysisScene::handlePythonError);
-    connect(pythonProcess, &QProcess::finished, this, &AnalysisScene::onPythonFinished);
+    // Initialize Python process with smart pointer
+    pythonProcess = std::make_unique<QProcess>(this);
+    connect(pythonProcess.get(), &QProcess::readyReadStandardOutput, this, &AnalysisScene::handlePythonOutput);
+    connect(pythonProcess.get(), &QProcess::readyReadStandardError, this, &AnalysisScene::handlePythonError);
+    connect(pythonProcess.get(), &QProcess::finished, this, &AnalysisScene::onPythonFinished);
 }
 
 AnalysisScene::~AnalysisScene()
@@ -44,6 +44,7 @@ AnalysisScene::~AnalysisScene()
             pythonProcess->kill();
         }
     }
+    // Smart pointer will automatically clean up the QProcess
 }
 
 void AnalysisScene::setupUI()
@@ -58,7 +59,7 @@ void AnalysisScene::setupUI()
     // Clean header
     QHBoxLayout *headerLayout = new QHBoxLayout();
     
-    backButton = new QPushButton("← Назад");
+    backButton = std::make_unique<QPushButton>("← Назад");
     backButton->setObjectName("backButton");
     backButton->setMaximumWidth(100);
     backButton->setMinimumHeight(40);
@@ -80,25 +81,25 @@ void AnalysisScene::setupUI()
             background-color: #e0e0e0;
         }
     )");
-    headerLayout->addWidget(backButton);
+    headerLayout->addWidget(backButton.get());
     
     headerLayout->addStretch();
     
-    modelTitleLabel = new QLabel("Анализ модели");
+    modelTitleLabel = std::make_unique<QLabel>("Анализ модели");
     modelTitleLabel->setStyleSheet(R"(
         font-size: 24px; 
         font-weight: 600; 
         color: #333333;
         padding: 8px 0;
     )");
-    headerLayout->addWidget(modelTitleLabel);
+    headerLayout->addWidget(modelTitleLabel.get());
     
     headerLayout->addStretch();
     
     mainLayout->addLayout(headerLayout);
 
     // Simple model path
-    modelPathLabel = new QLabel();
+    modelPathLabel = std::make_unique<QLabel>();
     modelPathLabel->setStyleSheet(R"(
         font-size: 13px; 
         color: #666666; 
@@ -111,10 +112,10 @@ void AnalysisScene::setupUI()
     )");
     modelPathLabel->setWordWrap(true);
     modelPathLabel->setMinimumHeight(40);
-    mainLayout->addWidget(modelPathLabel);
+    mainLayout->addWidget(modelPathLabel.get());
 
     // Clean progress bar
-    progressBar = new QProgressBar();
+    progressBar = std::make_unique<QProgressBar>();
     progressBar->setVisible(false);
     progressBar->setRange(0, 0); // Indeterminate progress
     progressBar->setMinimumHeight(24);
@@ -132,10 +133,10 @@ void AnalysisScene::setupUI()
             border-radius: 3px;
         }
     )");
-    mainLayout->addWidget(progressBar);
+    mainLayout->addWidget(progressBar.get());
 
     // Minimalist tab widget
-    mainTabWidget = new QTabWidget();
+    mainTabWidget = std::make_unique<QTabWidget>();
     mainTabWidget->setStyleSheet(R"(
         QTabWidget::pane {
             border: 1px solid #e0e0e0;
@@ -200,31 +201,31 @@ void AnalysisScene::setupUI()
     )";
 
     // Overview tab as table
-    overviewTable = new QTableWidget();
+    overviewTable = std::make_unique<QTableWidget>();
     overviewTable->setAlternatingRowColors(true);
     overviewTable->setSelectionBehavior(QAbstractItemView::SelectRows);
     overviewTable->setStyleSheet(tableStyle);
-    mainTabWidget->addTab(overviewTable, "Обзор");
+    mainTabWidget->addTab(overviewTable.get(), "Обзор");
 
     // Layers table
-    layersTable = new QTableWidget();
+    layersTable = std::make_unique<QTableWidget>();
     layersTable->setAlternatingRowColors(true);
     layersTable->setSelectionBehavior(QAbstractItemView::SelectRows);
     layersTable->setSortingEnabled(true);
     layersTable->setStyleSheet(tableStyle);
-    mainTabWidget->addTab(layersTable, "Слои");
+    mainTabWidget->addTab(layersTable.get(), "Слои");
 
     // Optimizer tab
-    optimizerTable = new QTableWidget();
+    optimizerTable = std::make_unique<QTableWidget>();
     optimizerTable->setAlternatingRowColors(true);
     optimizerTable->setStyleSheet(tableStyle);
-    mainTabWidget->addTab(optimizerTable, "Оптимизатор");
+    mainTabWidget->addTab(optimizerTable.get(), "Оптимизатор");
 
     // Metrics tab
-    metricsTable = new QTableWidget();
+    metricsTable = std::make_unique<QTableWidget>();
     metricsTable->setAlternatingRowColors(true);
     metricsTable->setStyleSheet(tableStyle);
-    mainTabWidget->addTab(metricsTable, "Метрики");
+    mainTabWidget->addTab(metricsTable.get(), "Метрики");
 
     // Weights tab with multiple views
     QWidget *weightsWidget = new QWidget();
@@ -257,7 +258,7 @@ void AnalysisScene::setupUI()
     )");
     
     // Text view for detailed weights info
-    weightsTextEdit = new QTextEdit();
+    weightsTextEdit = std::make_unique<QTextEdit>();
     weightsTextEdit->setReadOnly(true);
     weightsTextEdit->setFont(QFont("Consolas", 10));
     weightsTextEdit->setStyleSheet(R"(
@@ -271,18 +272,18 @@ void AnalysisScene::setupUI()
             line-height: 1.4;
         }
     )");
-    weightsTabWidget->addTab(weightsTextEdit, "Текст");
+    weightsTabWidget->addTab(weightsTextEdit.get(), "Текст");
     
     // Table view for structured weights info
-    weightsTable = new QTableWidget();
+    weightsTable = std::make_unique<QTableWidget>();
     weightsTable->setAlternatingRowColors(true);
     weightsTable->setSelectionBehavior(QAbstractItemView::SelectRows);
     weightsTable->setSortingEnabled(true);
     weightsTable->setStyleSheet(tableStyle);
-    weightsTabWidget->addTab(weightsTable, "Таблица");
+    weightsTabWidget->addTab(weightsTable.get(), "Таблица");
     
     // Tree view for hierarchical weights info
-    weightsTree = new QTreeWidget();
+    weightsTree = std::make_unique<QTreeWidget>();
     weightsTree->setHeaderLabels(QStringList() << "Слой" << "Тип весов" << "Форма" << "Диапазон" << "Параметры");
     weightsTree->setAlternatingRowColors(true);
     weightsTree->setStyleSheet(R"(
@@ -313,13 +314,13 @@ void AnalysisScene::setupUI()
             font-size: 12px;
         }
     )");
-    weightsTabWidget->addTab(weightsTree, "Дерево");
+    weightsTabWidget->addTab(weightsTree.get(), "Дерево");
     
     weightsLayout->addWidget(weightsTabWidget);
     mainTabWidget->addTab(weightsWidget, "Веса");
 
     // Tree view tab
-    modelTree = new QTreeWidget();
+    modelTree = std::make_unique<QTreeWidget>();
     modelTree->setHeaderLabels(QStringList() << "Слой/Информация" << "Тип/Значение" << "Параметры" << "Нейроны" << "Форма входа" << "Форма выхода/Размер");
     modelTree->setAlternatingRowColors(true);
     modelTree->setStyleSheet(R"(
@@ -351,15 +352,15 @@ void AnalysisScene::setupUI()
             font-size: 12px;
         }
     )");
-    mainTabWidget->addTab(modelTree, "Дерево");
+    mainTabWidget->addTab(modelTree.get(), "Дерево");
 
-    mainLayout->addWidget(mainTabWidget);
+    mainLayout->addWidget(mainTabWidget.get());
 
     // Minimalist buttons
     QHBoxLayout *buttonLayout = new QHBoxLayout();
     buttonLayout->setSpacing(12);
     
-    analyzeButton = new QPushButton("Анализировать модель");
+    analyzeButton = std::make_unique<QPushButton>("Анализировать модель");
     analyzeButton->setStyleSheet(R"(
         QPushButton {
             background-color: #333333;
@@ -382,11 +383,11 @@ void AnalysisScene::setupUI()
             color: #999999;
         }
     )");
-    buttonLayout->addWidget(analyzeButton);
+    buttonLayout->addWidget(analyzeButton.get());
     
     buttonLayout->addStretch();
     
-    simplifyButton = new QPushButton("Упростить модель");
+    simplifyButton = std::make_unique<QPushButton>("Упростить модель");
     simplifyButton->setObjectName("simplifyButton");
     simplifyButton->setStyleSheet(R"(
         QPushButton {
@@ -411,7 +412,7 @@ void AnalysisScene::setupUI()
         }
     )");
     simplifyButton->setEnabled(false); // Initially disabled
-    buttonLayout->addWidget(simplifyButton);
+    buttonLayout->addWidget(simplifyButton.get());
     
     mainLayout->addLayout(buttonLayout);
 
@@ -426,7 +427,7 @@ void AnalysisScene::setupUI()
     )");
     mainLayout->addWidget(logLabel);
     
-    logOutput = new QTextEdit();
+    logOutput = std::make_unique<QTextEdit>();
     logOutput->setMaximumHeight(120);
     logOutput->setMinimumHeight(80);
     logOutput->setReadOnly(true);
@@ -445,12 +446,12 @@ void AnalysisScene::setupUI()
             border-color: #cccccc;
         }
     )");
-    mainLayout->addWidget(logOutput);
+    mainLayout->addWidget(logOutput.get());
 
     // Connect signals
-    connect(backButton, &QPushButton::clicked, this, &AnalysisScene::backRequested);
-    connect(analyzeButton, &QPushButton::clicked, this, &AnalysisScene::startAnalysis);
-    connect(simplifyButton, &QPushButton::clicked, this, &AnalysisScene::simplifyRequested);
+    connect(backButton.get(), &QPushButton::clicked, this, &AnalysisScene::backRequested);
+    connect(analyzeButton.get(), &QPushButton::clicked, this, &AnalysisScene::startAnalysis);
+    connect(simplifyButton.get(), &QPushButton::clicked, this, &AnalysisScene::simplifyRequested);
 }
 
 void AnalysisScene::setModelPath(const QString &filePath)
@@ -470,10 +471,17 @@ void AnalysisScene::clearData()
 
 void AnalysisScene::startAnalysis()
 {
-    if (currentFilePath.isEmpty()) {
-        QMessageBox::warning(this, "Ошибка", "Сначала выберите модель");
-        return;
-    }
+    try {
+        if (currentFilePath.isEmpty()) {
+            QMessageBox::warning(this, "Ошибка", "Сначала выберите модель");
+            return;
+        }
+        
+        // Validate file path for security
+        if (!isValidFilePath(currentFilePath)) {
+            QMessageBox::critical(this, "Ошибка безопасности", "Недопустимый путь к файлу");
+            return;
+        }
     
     // Check Python environment first
     if (!checkPythonEnvironment()) {
@@ -563,18 +571,88 @@ void AnalysisScene::startAnalysis()
         return;
     }
     
+    // Sanitize arguments for security
     QStringList args;
-    args << scriptPath << currentFilePath;
+    args << QDir::toNativeSeparators(scriptPath) << QDir::toNativeSeparators(currentFilePath);
+    
+    // Validate Python executable path
+    if (!isValidPythonPath(pythonExe)) {
+        logOutput->append("❌ Ошибка безопасности: Недопустимый путь к Python");
+        progressBar->setVisible(false);
+        return;
+    }
     
     logOutput->append("▶️ Запускаем: " + pythonExe + " " + scriptPath + " " + currentFilePath);
     
+    // Set working directory for security
+    pythonProcess->setWorkingDirectory(QCoreApplication::applicationDirPath());
     pythonProcess->start(pythonExe, args);
     
-    if (!pythonProcess->waitForStarted(5000)) {
-        logOutput->append("❌ Ошибка запуска Python процесса");
-        progressBar->setVisible(false);
-        QMessageBox::critical(this, "Ошибка", "Не удалось запустить Python. Убедитесь, что Python установлен и доступен в PATH.");
+        if (!pythonProcess->waitForStarted(5000)) {
+            logOutput->append("❌ Ошибка запуска Python процесса");
+            progressBar->setVisible(false);
+            QMessageBox::critical(this, "Ошибка", "Не удалось запустить Python. Убедитесь, что Python установлен и доступен в PATH.");
+        }
+    } catch (const std::exception &e) {
+        handleException(e, "startAnalysis");
     }
+}
+
+bool AnalysisScene::isValidFilePath(const QString &filePath)
+{
+    try {
+        QFileInfo fileInfo(filePath);
+        
+        // Check for path traversal attacks
+        if (filePath.contains("..") || filePath.contains("~")) {
+            return false;
+        }
+        
+        // Check if file exists and is readable
+        if (!fileInfo.exists() || !fileInfo.isReadable()) {
+            return false;
+        }
+        
+        // Check file extension for security
+        QString extension = fileInfo.suffix().toLower();
+        QStringList allowedExtensions = {"h5", "hdf5", "pb", "pkl", "pth", "pt", "onnx", "tflite"};
+        
+        return allowedExtensions.contains(extension);
+    } catch (const std::exception &e) {
+        handleException(e, "isValidFilePath");
+        return false;
+    }
+}
+
+bool AnalysisScene::isValidPythonPath(const QString &pythonPath)
+{
+    try {
+        QFileInfo pythonInfo(pythonPath);
+        
+        // Check for path traversal
+        if (pythonPath.contains("..") || pythonPath.contains("~")) {
+            return false;
+        }
+        
+        // Check if it's a valid executable
+        if (!pythonInfo.exists() || !pythonInfo.isExecutable()) {
+            return false;
+        }
+        
+        // Check file name for security
+        QString fileName = pythonInfo.fileName().toLower();
+        return fileName.contains("python") || fileName == "python.exe";
+    } catch (const std::exception &e) {
+        handleException(e, "isValidPythonPath");
+        return false;
+    }
+}
+
+void AnalysisScene::handleException(const std::exception &e, const QString &context)
+{
+    QString errorMsg = QString("Ошибка в %1: %2").arg(context).arg(e.what());
+    logOutput->append("❌ " + errorMsg);
+    QMessageBox::critical(this, "Критическая ошибка", errorMsg);
 }
 
 void AnalysisScene::stopAnalysis()
@@ -590,7 +668,7 @@ void AnalysisScene::stopAnalysis()
 
 void AnalysisScene::handlePythonOutput()
 {
-    if (pythonProcess->state() != QProcess::Running) {
+    if (!pythonProcess || pythonProcess->state() != QProcess::Running) {
         return;
     }
     
@@ -645,7 +723,7 @@ void AnalysisScene::handlePythonOutput()
 
 void AnalysisScene::handlePythonError()
 {
-    if (pythonProcess->state() != QProcess::Running) {
+    if (!pythonProcess || pythonProcess->state() != QProcess::Running) {
         return;
     }
     
@@ -683,7 +761,7 @@ void AnalysisScene::populateModelTree(const QJsonObject &modelData)
     modelTree->clear();
     
     // Clean header section
-    QTreeWidgetItem *basicHeader = new QTreeWidgetItem(modelTree);
+    QTreeWidgetItem *basicHeader = new QTreeWidgetItem(modelTree.get());
     basicHeader->setText(0, "Основная информация");
     basicHeader->setText(1, "");
     basicHeader->setText(2, "");
@@ -707,7 +785,7 @@ void AnalysisScene::populateModelTree(const QJsonObject &modelData)
     basicHeader->setForeground(5, headerText);
     
     // Model type and framework
-    QTreeWidgetItem *modelTypeItem = new QTreeWidgetItem(modelTree);
+    QTreeWidgetItem *modelTypeItem = new QTreeWidgetItem(modelTree.get());
     modelTypeItem->setText(0, "Тип модели");
     modelTypeItem->setText(1, modelData.contains("framework") ? modelData["framework"].toString() : "Keras");
     modelTypeItem->setText(2, "");
@@ -717,7 +795,7 @@ void AnalysisScene::populateModelTree(const QJsonObject &modelData)
     
     // TensorFlow version
     if (modelData.contains("tensorflow_version")) {
-        QTreeWidgetItem *tfVersionItem = new QTreeWidgetItem(modelTree);
+        QTreeWidgetItem *tfVersionItem = new QTreeWidgetItem(modelTree.get());
         tfVersionItem->setText(0, "Версия TensorFlow");
         tfVersionItem->setText(1, modelData["tensorflow_version"].toString());
         tfVersionItem->setText(2, "");
@@ -727,7 +805,7 @@ void AnalysisScene::populateModelTree(const QJsonObject &modelData)
     }
     
     // Total parameters
-    QTreeWidgetItem *paramsItem = new QTreeWidgetItem(modelTree);
+    QTreeWidgetItem *paramsItem = new QTreeWidgetItem(modelTree.get());
     paramsItem->setText(0, "Всего параметров");
     paramsItem->setText(1, QString::number(modelData["total_params"].toInt()));
     paramsItem->setText(2, QString::number(modelData["total_params"].toInt()));
@@ -736,7 +814,7 @@ void AnalysisScene::populateModelTree(const QJsonObject &modelData)
     paramsItem->setText(5, "");
     
     // Trainable parameters
-    QTreeWidgetItem *trainableItem = new QTreeWidgetItem(modelTree);
+    QTreeWidgetItem *trainableItem = new QTreeWidgetItem(modelTree.get());
     trainableItem->setText(0, "Обучаемых параметров");
     trainableItem->setText(1, QString::number(modelData["trainable_params"].toInt()));
     trainableItem->setText(2, QString::number(modelData["trainable_params"].toInt()));
@@ -745,7 +823,7 @@ void AnalysisScene::populateModelTree(const QJsonObject &modelData)
     trainableItem->setText(5, "");
     
     // Model size
-    QTreeWidgetItem *sizeItem = new QTreeWidgetItem(modelTree);
+    QTreeWidgetItem *sizeItem = new QTreeWidgetItem(modelTree.get());
     sizeItem->setText(0, "Размер файла");
     sizeItem->setText(1, QString::number(modelData["model_size_mb"].toDouble(), 'f', 2) + " MB");
     sizeItem->setText(2, "");
@@ -1174,7 +1252,7 @@ void AnalysisScene::populateWeightsTree(const QJsonObject &modelData)
             QJsonObject weightsInfo = layer["weights_info"].toObject();
             
             // Create main layer item
-            QTreeWidgetItem *layerItem = new QTreeWidgetItem(weightsTree);
+            QTreeWidgetItem *layerItem = new QTreeWidgetItem(weightsTree.get());
             layerItem->setText(0, QString("Слой %1: %2").arg(i).arg(layer["name"].toString()));
             layerItem->setText(1, layer["type"].toString());
             layerItem->setText(2, QString::number(layer["params"].toInt()));

@@ -22,6 +22,7 @@
 #include <QGraphicsEllipseItem>
 #include <QGraphicsLineItem>
 #include <QJsonObject>
+#include <memory>
 
 // Структура для нейрона
 struct Neuron {
@@ -121,25 +122,25 @@ private:
     void updateNeuralNetwork();
     void addLogMessage(const QString &message);
 
-    // UI Elements
-    QPushButton *backButton;
-    QPushButton *startButton;
-    QPushButton *stopButton;
-    QLabel *titleLabel;
-    QLabel *statusLabel;
+    // UI Elements - using smart pointers for memory safety
+    std::unique_ptr<QPushButton> backButton;
+    std::unique_ptr<QPushButton> startButton;
+    std::unique_ptr<QPushButton> stopButton;
+    std::unique_ptr<QLabel> titleLabel;
+    std::unique_ptr<QLabel> statusLabel;
     
     // 2D Visualization
-    NeuralNetwork2DWidget *network2DWidget;
+    std::unique_ptr<NeuralNetwork2DWidget> network2DWidget;
     
     // Dynamic Loader
-    QLabel *loaderLabel;
-    QProgressBar *loaderProgress;
-    QTimer *loaderTimer;
+    std::unique_ptr<QLabel> loaderLabel;
+    std::unique_ptr<QProgressBar> loaderProgress;
+    std::unique_ptr<QTimer> loaderTimer;
     int loaderStep;
     QStringList loaderMessages;
     
     // Log Window
-    QTextEdit *logOutput;
+    std::unique_ptr<QTextEdit> logOutput;
     
     // Data
     QJsonObject currentModelData;
