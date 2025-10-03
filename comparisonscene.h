@@ -28,7 +28,16 @@
 #include <QPointF>
 #include <QRect>
 #include <QColor>
+#include <QTimer>
 #include <memory>
+#include <QtCharts/QChartView>
+#include <QtCharts/QBarSeries>
+#include <QtCharts/QBarSet>
+#include <QtCharts/QBarCategoryAxis>
+#include <QtCharts/QValueAxis>
+#include <QtCharts/QPieSeries>
+#include <QtCharts/QPieSlice>
+#include <QtCharts/QLineSeries>
 
 // 3D виджет для сравнения моделей
 class ModelComparison3DWidget : public QWidget
@@ -53,6 +62,8 @@ protected:
 private:
     void drawModel(QPainter &painter, const QJsonObject &model, const QRect &rect, bool isOriginal);
     void drawPolygonMesh(QPainter &painter, const QJsonObject &model, const QRect &rect, bool isOriginal);
+    void drawConnections3D(QPainter &painter, const QVector<QVector3D> &positions, const QRect &rect, bool isOriginal);
+    void drawNeurons3D(QPainter &painter, const QVector<QVector3D> &positions, const QVector<float> &sizes, const QVector<QColor> &colors, const QRect &rect, bool isOriginal);
     void drawTooltips(QPainter &painter, const QPoint &mousePos);
     QPoint worldToScreen(const QVector3D &worldPos);
     QVector3D screenToWorld(const QPoint &screenPos);
@@ -70,6 +81,7 @@ private:
     QPoint mousePos;
     int hoveredNeuron;
     bool showTooltips;
+    QTimer *animationTimer;
 };
 
 class ComparisonScene : public QWidget
@@ -91,7 +103,6 @@ private slots:
     void onSaveClicked();
     void onBrowseClicked();
     void onTabChanged(int index);
-    void onOpacityChanged(int value);
     void onComparisonModeChanged(bool sideBySide);
 
 private:
@@ -110,6 +121,8 @@ private:
     void createMetricsChart(QWidget *parent);
     void createParametersChart(QWidget *parent);
     void createSizeChart(QWidget *parent);
+    void createAccuracyChart(QWidget *parent);
+    QWidget* createMaterialCard(const QString &title, const QString &icon, const QString &color);
     void updateModelInfo();
     void setupConnections();
 
@@ -128,13 +141,13 @@ private:
 
     // 3D Comparison Tab
     std::unique_ptr<ModelComparison3DWidget> comparison3DWidget;
-    std::unique_ptr<QSlider> opacitySlider;
     std::unique_ptr<QCheckBox> sideBySideCheckBox;
 
     // Statistics Tab
     std::unique_ptr<QWidget> metricsChart;
     std::unique_ptr<QWidget> parametersChart;
     std::unique_ptr<QWidget> sizeChart;
+    std::unique_ptr<QWidget> accuracyChart;
 
     // Data
     QJsonObject originalModelData;

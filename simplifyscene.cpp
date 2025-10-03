@@ -435,11 +435,6 @@ void SimplifyScene::setupUI()
     
     mainLayout->addLayout(headerLayout);
 
-    // Информация об автоматическом упрощении
-    QLabel *autoLabel = new QLabel("🤖 Автоматическое упрощение: Все алгоритмы будут применены последовательно");
-    autoLabel->setStyleSheet("font-size: 14px; font-weight: 500; color: #007bff; padding: 8px; background-color: #e3f2fd; border-radius: 6px;");
-    autoLabel->setAlignment(Qt::AlignCenter);
-    mainLayout->addWidget(autoLabel);
 
     // Control buttons - перемещаем наверх
     QHBoxLayout *buttonLayout = new QHBoxLayout();

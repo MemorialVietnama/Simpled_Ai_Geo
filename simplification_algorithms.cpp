@@ -85,7 +85,6 @@ void SimplificationAlgorithms::processStep()
     if (currentStep >= totalSteps) {
         progressTimer->stop();
         
-        // Выполняем реальный алгоритм
         try {
             SimplificationResult result = executeAlgorithm(currentAlgorithm, currentModel);
             emit algorithmFinished(currentAlgorithm, result);
@@ -365,9 +364,19 @@ QJsonObject SimplificationAlgorithms::createSimplifiedModel(const QJsonObject &o
 
 void SimplificationAlgorithms::calculateMetrics(const QJsonObject &originalModel, const QJsonObject &simplifiedModel, SimplificationResult &result)
 {
-    // Вычисляем базовые метрики
-    double originalSize = originalModel["size"].toDouble(100.0);
-    double simplifiedSize = simplifiedModel["size"].toDouble(originalSize * 0.5);
+    // Вычисляем базовые метрики (используем правильные поля)
+    double originalSize = originalModel["model_size_mb"].toDouble(100.0);
+    if (originalSize <= 0) {
+        originalSize = originalModel["size"].toDouble(100.0);
+    }
+    
+    // Вычисляем размер упрощенной модели на основе реального сжатия
+    double reductionFactor = 0.5; // По умолчанию 50% сжатие
+    if (simplifiedModel.contains("reduction_factor")) {
+        reductionFactor = simplifiedModel["reduction_factor"].toDouble(0.5);
+    }
+    
+    double simplifiedSize = originalSize * (1.0 - reductionFactor);
     
     result.compressionRatio = originalSize / simplifiedSize;
     result.sizeReduction = (originalSize - simplifiedSize) / originalSize * 100.0;
