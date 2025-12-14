@@ -1,5 +1,5 @@
-# Simpled-Ai-Models-App
-Simpled AI Models App — C++/Qt 6 программа для оптимизации нейросетей.  Simpled AI Models App — A C++/Qt 6 tool to optimize neural networks.
+# GeoSimplifyNN
+GeoSimplifyNN — C++/Qt 6 программа для оптимизации нейросетей.  Simpled AI Models App — A C++/Qt 6 tool to optimize neural networks.
 =======
 
 <div align="center">
@@ -19,7 +19,7 @@ Simpled AI Models App — C++/Qt 6 программа для оптимизац�
 
 ## 📋 О проекте
 
-**Simpled-Ai-Models-App** — это профессиональное C++ приложение, построенное на Qt 6, предназначенное для комплексного анализа и оптимизации нейросетевых моделей. Программа предоставляет интуитивный графический интерфейс для загрузки, анализа и упрощения моделей машинного обучения с поддержкой популярных форматов (Keras, TensorFlow, PyTorch).
+**GeoSimplifyNN** — это профессиональное C++ приложение, построенное на Qt 6, предназначенное для комплексного анализа и оптимизации нейросетевых моделей. Программа предоставляет интуитивный графический интерфейс для загрузки, анализа и упрощения моделей машинного обучения с поддержкой популярных форматов (Keras, TensorFlow, PyTorch).
 
 ### 🎯 Основные возможности
 
@@ -94,7 +94,7 @@ brew install qt6 cmake
 
 # Сборка проекта
 git clone https://github.com/MemorialVietnama/Simpled-Ai-Models-App.git
-cd Simpled-Ai-Models-App
+cd GeoSimplifyNN
 pip install -r requirements.txt
 qmake SimpledAi.pro && make
 ```
@@ -215,4 +215,5 @@ make -j$(nproc)
 
 
 </div>
+
 
